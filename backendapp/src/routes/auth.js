@@ -14,27 +14,22 @@ router.post('/register', async (req, res, next) => {
       return res.status(400).json({ error: 'Email and password are required' });
     }
     
-    // Hash password
-    const hashedPassword = await authService.hashPassword(password);
-    
-    // In production, save user to database
-    const user = {
-      id: Date.now().toString(),
+    const userData = {
       email,
-      username: username || email.split('@')[0],
-      password: hashedPassword,
-      role: 'user',
-      createdAt: new Date().toISOString()
+      password,
+      username: username || email.split('@')[0]
     };
     
-    // Create session
-    const session = authService.createSession(user);
+    const session = await authService.register(userData);
     
     res.status(201).json({
       message: 'User registered successfully',
       ...session
     });
   } catch (error) {
+    if (error.message === 'User already exists') {
+      return res.status(409).json({ error: error.message });
+    }
     next(error);
   }
 });
@@ -48,23 +43,16 @@ router.post('/login', async (req, res, next) => {
       return res.status(400).json({ error: 'Email and password are required' });
     }
     
-    // In production, fetch user from database
-    // For now, creating mock user
-    const user = {
-      id: Date.now().toString(),
-      email,
-      username: email.split('@')[0],
-      role: 'user'
-    };
-    
-    // Create session
-    const session = authService.createSession(user);
+    const session = await authService.login(email, password);
     
     res.json({
       message: 'Login successful',
       ...session
     });
   } catch (error) {
+    if (error.message === 'Invalid credentials') {
+      return res.status(401).json({ error: error.message });
+    }
     next(error);
   }
 });
@@ -78,23 +66,14 @@ router.post('/refresh', async (req, res, next) => {
       return res.status(400).json({ error: 'Refresh token is required' });
     }
     
-    // Verify refresh token
-    const decoded = authService.verifyToken(refreshToken);
-    
-    if (decoded.type !== 'refresh') {
-      return res.status(401).json({ error: 'Invalid refresh token' });
-    }
-    
-    // Create new access token
-    const user = { id: decoded.id, email: 'user@example.com', role: 'user' };
-    const newToken = authService.generateToken(user);
+    const accessToken = await authService.refreshAccessToken(refreshToken);
     
     res.json({
-      accessToken: newToken,
+      accessToken,
       refreshToken
     });
   } catch (error) {
-    res.status(401).json({ error: 'Invalid refresh token' });
+    res.status(401).json({ error: error.message || 'Invalid refresh token' });
   }
 });
 

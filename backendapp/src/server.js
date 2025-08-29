@@ -4,6 +4,8 @@ const helmet = require('helmet');
 const dotenv = require('dotenv');
 const winston = require('winston');
 const path = require('path');
+const mongoose = require('mongoose');
+const passport = require('passport');
 
 // Load environment variables
 dotenv.config();
@@ -37,11 +39,27 @@ const logger = winston.createLogger({
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// MongoDB connection
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/deploymentapp';
+mongoose.connect(MONGODB_URI)
+  .then(() => {
+    logger.info('Connected to MongoDB');
+    console.log('Connected to MongoDB');
+  })
+  .catch(err => {
+    logger.error('MongoDB connection error:', err);
+    console.error('MongoDB connection error:', err);
+  });
+
+// Initialize Passport and auth strategies
+require('./services/authService');
+
 // Middleware
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(passport.initialize());
 
 // Health check endpoint
 app.get('/health', (req, res) => {
