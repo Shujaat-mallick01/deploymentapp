@@ -58,7 +58,7 @@ The script will:
 ngrok http 3000
 
 # You'll see output like:
-# Forwarding  https://abc123def456.ngrok-free.app -> http://localhost:3000
+# Forwarding  https://abc123def456.ngrok-free.app -> https://1xklqtdz-3000.uks1.devtunnels.ms
 #             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #             Copy this HTTPS URL!
 ```
@@ -104,7 +104,7 @@ npm run dev
 ## Step 5: Access Your Platform
 
 - **Frontend**: http://localhost:3001
-- **Backend API**: http://localhost:3000/health
+- **Backend API**: https://1xklqtdz-3000.uks1.devtunnels.ms/health
 - **Ngrok Inspector**: http://127.0.0.1:4040
 
 ## Step 6: Configure GitHub Webhook (Optional)

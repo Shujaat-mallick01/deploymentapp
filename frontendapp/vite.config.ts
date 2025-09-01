@@ -14,7 +14,7 @@ export default defineConfig({
     port: 3001,
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'https://1xklqtdz-3000.uks1.devtunnels.ms',
         changeOrigin: true
       }
     }

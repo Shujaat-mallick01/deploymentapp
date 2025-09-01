@@ -72,7 +72,7 @@ cp .env.example .env
      ```
      Application name: Your Deployment Platform
      Homepage URL: http://localhost:3001 (for development)
-     Authorization callback URL: http://localhost:3000/api/auth/github/callback
+     Authorization callback URL: https://1xklqtdz-3000.uks1.devtunnels.ms/api/auth/github/callback
      ```
 
 3. **Get your credentials**:
@@ -89,7 +89,7 @@ cp .env.example .env
 - **Important**: Only shown once! Copy immediately
 
 ### `GITHUB_CALLBACK_URL`
-- **Development**: `http://localhost:3000/api/auth/github/callback`
+- **Development**: `https://1xklqtdz-3000.uks1.devtunnels.ms/api/auth/github/callback`
 - **Production**: `https://yourdomain.com/api/auth/github/callback`
 - **Must match**: The callback URL in your GitHub OAuth App settings
 
@@ -304,7 +304,7 @@ S3_SECRET_ACCESS_KEY=minioadmin
   docker run -p 9090:9090 prom/prometheus
   ```
 
-### `GRAFANA_URL=http://localhost:3000`
+### `GRAFANA_URL=https://1xklqtdz-3000.uks1.devtunnels.ms`
 - **Default**: Port 3000 (might conflict with backend)
 - **Setup Grafana**:
   ```bash
@@ -364,7 +364,7 @@ node -e "require('redis').createClient().ping().then(() => console.log('Redis co
 npm start
 
 # 4. Test auth endpoint
-curl http://localhost:3000/health
+curl https://1xklqtdz-3000.uks1.devtunnels.ms/health
 ```
 
 ---

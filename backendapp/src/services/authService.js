@@ -30,12 +30,24 @@ passport.use(new JwtStrategy(jwtOptions, async (jwtPayload, done) => {
 }));
 
 if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
+  console.log('Configuring GitHub OAuth Strategy:', {
+    clientID: process.env.GITHUB_CLIENT_ID,
+    callbackURL: process.env.GITHUB_CALLBACK_URL || "https://1xklqtdz-3000.uks1.devtunnels.ms/api/auth/github/callback"
+  });
+  
   passport.use(new GitHubStrategy({
     clientID: process.env.GITHUB_CLIENT_ID,
     clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    callbackURL: process.env.GITHUB_CALLBACK_URL || "http://localhost:3000/api/auth/github/callback"
+    callbackURL: process.env.GITHUB_CALLBACK_URL || "https://1xklqtdz-3000.uks1.devtunnels.ms/api/auth/github/callback",
+    passReqToCallback: true
   },
-  async (accessToken, refreshToken, profile, done) => {
+  async (req, accessToken, refreshToken, profile, done) => {
+    console.log('GitHub OAuth callback received:', {
+      hasAccessToken: !!accessToken,
+      hasRefreshToken: !!refreshToken,
+      profileId: profile?.id,
+      profileUsername: profile?.username
+    });
     try {
       let user = await User.findOne({ githubId: profile.id });
       
@@ -87,7 +99,7 @@ if (process.env.GITLAB_CLIENT_ID && process.env.GITLAB_CLIENT_SECRET) {
   passport.use(new GitLabStrategy({
     clientID: process.env.GITLAB_CLIENT_ID,
     clientSecret: process.env.GITLAB_CLIENT_SECRET,
-    callbackURL: process.env.GITLAB_CALLBACK_URL || "http://localhost:3000/api/auth/gitlab/callback"
+    callbackURL: process.env.GITLAB_CALLBACK_URL || "https://1xklqtdz-3000.uks1.devtunnels.ms/api/auth/gitlab/callback"
   },
   async (accessToken, refreshToken, profile, done) => {
     try {
@@ -141,7 +153,7 @@ if (process.env.BITBUCKET_CLIENT_ID && process.env.BITBUCKET_CLIENT_SECRET) {
   passport.use(new BitbucketStrategy({
     clientID: process.env.BITBUCKET_CLIENT_ID,
     clientSecret: process.env.BITBUCKET_CLIENT_SECRET,
-    callbackURL: process.env.BITBUCKET_CALLBACK_URL || "http://localhost:3000/api/auth/bitbucket/callback"
+    callbackURL: process.env.BITBUCKET_CALLBACK_URL || "https://1xklqtdz-3000.uks1.devtunnels.ms/api/auth/bitbucket/callback"
   },
   async (accessToken, refreshToken, profile, done) => {
     try {

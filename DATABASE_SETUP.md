@@ -217,5 +217,5 @@ After database setup:
 
 The platform will be available at:
 - Frontend: http://localhost:3001
-- Backend API: http://localhost:3000 (or ngrok URL)
+- Backend API: https://1xklqtdz-3000.uks1.devtunnels.ms (or ngrok URL)
 - Ngrok Dashboard: http://localhost:4040

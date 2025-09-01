@@ -51,7 +51,7 @@ npm run dev
 
 ## 📝 Access Your Platform
 - Frontend: http://localhost:3001
-- Backend API: http://localhost:3000
+- Backend API: https://1xklqtdz-3000.uks1.devtunnels.ms
 - Ngrok Dashboard: http://localhost:4040
 
 ## 🔧 GitHub Integration

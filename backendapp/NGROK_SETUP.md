@@ -59,7 +59,7 @@ Account                       yourname@email.com (Plan: Free)
 Version                       3.4.0
 Region                        United States (us)
 Web Interface                 http://127.0.0.1:4040
-Forwarding                    https://abc123def456.ngrok-free.app -> http://localhost:3000
+Forwarding                    https://abc123def456.ngrok-free.app -> https://1xklqtdz-3000.uks1.devtunnels.ms
 
 Connections                   ttl     opn     rt1     rt5     p50     p90
                               0       0       0.00    0.00    0.00    0.00
@@ -253,7 +253,7 @@ cloudflared tunnel create dev-platform
 
 4. Run the tunnel:
 ```bash
-cloudflared tunnel --url http://localhost:3000 run dev-platform
+cloudflared tunnel --url https://1xklqtdz-3000.uks1.devtunnels.ms run dev-platform
 ```
 
 This gives you a stable URL that doesn't change!

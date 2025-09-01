@@ -62,7 +62,7 @@ if (-not (Test-Path ".env")) {
 }
 
 # Start backend
-Write-Host "Starting backend server on http://localhost:3000" -ForegroundColor Gray
+Write-Host "Starting backend server on https://1xklqtdz-3000.uks1.devtunnels.ms" -ForegroundColor Gray
 Start-Process powershell -ArgumentList "-NoExit", "-Command", "npm start" -WindowStyle Normal
 
 Set-Location "..\..\"
@@ -126,8 +126,8 @@ Write-Host "========================================" -ForegroundColor Green
 Write-Host ""
 Write-Host "Services:" -ForegroundColor Cyan
 Write-Host "  Frontend:    http://localhost:3001" -ForegroundColor White
-Write-Host "  Backend API: http://localhost:3000" -ForegroundColor White
-Write-Host "  Health Check: http://localhost:3000/health" -ForegroundColor White
+Write-Host "  Backend API: https://1xklqtdz-3000.uks1.devtunnels.ms" -ForegroundColor White
+Write-Host "  Health Check: https://1xklqtdz-3000.uks1.devtunnels.ms/health" -ForegroundColor White
 
 # Check if ngrok is running and provide URL
 if ($ngrokPath) {
@@ -143,7 +143,7 @@ Start-Sleep -Seconds 5
 
 # Test backend health
 try {
-    $response = Invoke-WebRequest -Uri "http://localhost:3000/health" -UseBasicParsing -TimeoutSec 5
+    $response = Invoke-WebRequest -Uri "https://1xklqtdz-3000.uks1.devtunnels.ms/health" -UseBasicParsing -TimeoutSec 5
     if ($response.StatusCode -eq 200) {
         Write-Host "✓ Backend is healthy!" -ForegroundColor Green
     }

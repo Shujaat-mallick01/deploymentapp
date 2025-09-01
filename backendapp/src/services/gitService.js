@@ -276,11 +276,13 @@ class GitService {
 
   async getGitHubRepositoryInfo(owner, repo, token) {
     try {
+      console.log(`Fetching GitHub repo info for ${owner}/${repo}`);
+      
       const response = await axios.get(
         `${this.githubApiUrl}/repos/${owner}/${repo}`,
         {
           headers: {
-            Authorization: `token ${token}`,
+            Authorization: `Bearer ${token}`,
             Accept: 'application/vnd.github.v3+json'
           }
         }
@@ -364,6 +366,63 @@ class GitService {
 
   async setupGitHubWebhook(owner, repo, token, webhookUrl, secret) {
     try {
+      console.log(`Setting up GitHub webhook for ${owner}/${repo}`);
+      console.log(`Webhook URL: ${webhookUrl}`);
+      
+      // First, check if a webhook already exists with this URL
+      try {
+        const existingHooks = await axios.get(
+          `${this.githubApiUrl}/repos/${owner}/${repo}/hooks`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: 'application/vnd.github.v3+json'
+            }
+          }
+        );
+        
+        // Check if webhook already exists
+        const existingWebhook = existingHooks.data.find(hook => 
+          hook.config && hook.config.url === webhookUrl
+        );
+        
+        if (existingWebhook) {
+          console.log('Webhook already exists, updating it...');
+          // Update existing webhook
+          const response = await axios.patch(
+            `${this.githubApiUrl}/repos/${owner}/${repo}/hooks/${existingWebhook.id}`,
+            {
+              active: true,
+              events: ['push', 'pull_request'],
+              config: {
+                url: webhookUrl,
+                content_type: 'json',
+                secret: secret,
+                insecure_ssl: '0'
+              }
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                Accept: 'application/vnd.github.v3+json'
+              }
+            }
+          );
+          
+          return {
+            id: response.data.id,
+            url: response.data.config.url,
+            active: response.data.active,
+            events: response.data.events,
+            createdAt: response.data.created_at,
+            updated: true
+          };
+        }
+      } catch (listError) {
+        console.log('Could not list existing webhooks:', listError.message);
+      }
+      
+      // Create new webhook
       const response = await axios.post(
         `${this.githubApiUrl}/repos/${owner}/${repo}/hooks`,
         {
@@ -379,7 +438,7 @@ class GitService {
         },
         {
           headers: {
-            Authorization: `token ${token}`,
+            Authorization: `Bearer ${token}`,
             Accept: 'application/vnd.github.v3+json'
           }
         }
@@ -390,10 +449,13 @@ class GitService {
         url: response.data.config.url,
         active: response.data.active,
         events: response.data.events,
-        createdAt: response.data.created_at
+        createdAt: response.data.created_at,
+        created: true
       };
     } catch (error) {
-      throw new Error(`Failed to setup GitHub webhook: ${error.message}`);
+      console.error('GitHub webhook error details:', error.response?.data);
+      const errorMessage = error.response?.data?.message || error.response?.data?.errors?.[0]?.message || error.message;
+      throw new Error(`Failed to setup GitHub webhook: ${errorMessage}`);
     }
   }
 
@@ -509,6 +571,81 @@ class GitService {
         message: error.message
       };
     }
+  }
+
+  async getRepositoryInfo(repoUrl, token) {
+    try {
+      const provider = this.detectProvider(repoUrl);
+      const repoPath = this.parseRepoPath(repoUrl);
+      
+      switch (provider) {
+        case 'github':
+          const [owner, repo] = repoPath.split('/');
+          return await this.getGitHubRepositoryInfo(owner, repo, token);
+        case 'gitlab':
+          return await this.getGitLabRepositoryInfo(repoPath, token);
+        case 'bitbucket':
+          const [workspace, repoSlug] = repoPath.split('/');
+          return await this.getBitbucketRepositoryInfo(workspace, repoSlug, token);
+        default:
+          throw new Error('Unsupported git provider');
+      }
+    } catch (error) {
+      throw new Error(`Failed to get repository info: ${error.message}`);
+    }
+  }
+
+  async setupWebhook(repoUrl, token) {
+    try {
+      const provider = this.detectProvider(repoUrl);
+      const repoPath = this.parseRepoPath(repoUrl);
+      // Use WEBHOOK_URL from env if available, otherwise use ngrok URL or localhost
+      const webhookUrl = process.env.WEBHOOK_URL || `${process.env.BASE_URL || 'https://1xklqtdz-3000.uks1.devtunnels.ms'}/api/git/webhook`;
+      
+      // GitHub won't accept localhost URLs for webhooks
+      if (webhookUrl.includes('localhost') || webhookUrl.includes('127.0.0.1')) {
+        console.warn('WARNING: Using localhost URL for webhook. GitHub requires a publicly accessible URL.');
+        console.warn('Please use ngrok or a public URL. Run: ngrok http 3000');
+        console.warn('Then update WEBHOOK_URL in .env with the ngrok URL');
+        
+        // Skip webhook setup for localhost but continue with repository connection
+        return {
+          skipped: true,
+          reason: 'Localhost URLs are not supported by GitHub webhooks. Please use ngrok or deploy to a public server.',
+          instructions: '1. Run: ngrok http 3000\n2. Copy the HTTPS URL\n3. Update WEBHOOK_URL in .env\n4. Restart the server'
+        };
+      }
+      
+      const webhookUrlToUse = webhookUrl;
+      const secret = this.webhookSecret;
+      
+      switch (provider) {
+        case 'github':
+          const [owner, repo] = repoPath.split('/');
+          return await this.setupGitHubWebhook(owner, repo, token, webhookUrlToUse, secret);
+        case 'gitlab':
+          return await this.setupGitLabWebhook(repoPath, token, webhookUrl, secret);
+        case 'bitbucket':
+          const [workspace, repoSlug] = repoPath.split('/');
+          return await this.setupBitbucketWebhook(workspace, repoSlug, token, webhookUrl, secret);
+        default:
+          throw new Error('Unsupported git provider');
+      }
+    } catch (error) {
+      throw new Error(`Failed to setup webhook: ${error.message}`);
+    }
+  }
+
+  detectProvider(repoUrl) {
+    if (repoUrl.includes('github.com')) return 'github';
+    if (repoUrl.includes('gitlab.com')) return 'gitlab';
+    if (repoUrl.includes('bitbucket.org')) return 'bitbucket';
+    return null;
+  }
+
+  parseRepoPath(repoUrl) {
+    const urlParts = repoUrl.replace(/\.git$/, '').split('/');
+    return urlParts.slice(-2).join('/');
   }
 
   async cleanupOldRepositories() {

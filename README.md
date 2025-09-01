@@ -79,7 +79,7 @@ npm run dev
 
 4. **Access the application**
 - Frontend: http://localhost:3001
-- Backend API: http://localhost:3000
+- Backend API: https://1xklqtdz-3000.uks1.devtunnels.ms
 - Ngrok Inspector: http://127.0.0.1:4040
 
 #### Option 2: Without Ngrok (No webhook support)
@@ -157,7 +157,7 @@ ngrok config add-authtoken YOUR_AUTH_TOKEN
 3. Fill in:
    - Application name: `Deployment Platform Dev`
    - Homepage URL: `http://localhost:3001`
-   - Callback URL: `http://localhost:3000/api/auth/github/callback`
+   - Callback URL: `https://1xklqtdz-3000.uks1.devtunnels.ms/api/auth/github/callback`
 4. Copy Client ID and Client Secret to `.env`
 
 ### Webhook Setup

@@ -1,7 +1,7 @@
 // API Configuration
 export const API_BASE_URL = process.env.NODE_ENV === 'production' 
     ? window.location.origin.replace(':3001', ':3000')
-    : 'http://localhost:3000';
+    : 'https://1xklqtdz-3000.uks1.devtunnels.ms';
 
 export const config = {
     apiUrl: API_BASE_URL,
@@ -11,7 +11,7 @@ export const config = {
     webhookUrl: `${API_BASE_URL}/api/git/webhook`,
     wsUrl: process.env.NODE_ENV === 'production'
         ? window.location.origin.replace('http', 'ws').replace(':3001', ':3000')
-        : 'ws://localhost:3000'
+        : 'wss://1xklqtdz-3000.uks1.devtunnels.ms'
 };
 
 export const endpoints = {

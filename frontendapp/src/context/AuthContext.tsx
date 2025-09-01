@@ -14,6 +14,7 @@ interface AuthContextType {
   user: User | null
   token: string | null
   login: (email: string, password: string) => Promise<void>
+  loginWithToken: (token: string) => Promise<void>
   register: (email: string, password: string, username?: string) => Promise<void>
   logout: () => void
   loading: boolean
@@ -94,8 +95,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }
 
+  const loginWithToken = async (accessToken: string) => {
+    try {
+      localStorage.setItem('token', accessToken)
+      setToken(accessToken)
+      axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`
+      
+      const response = await axios.get(`${config.apiUrl}/api/auth/verify`)
+      setUser(response.data.user)
+      
+      toast.success('Login successful!')
+    } catch (error: any) {
+      localStorage.removeItem('token')
+      setToken(null)
+      delete axios.defaults.headers.common['Authorization']
+      toast.error(error.response?.data?.error || 'Token validation failed')
+      throw error
+    }
+  }
+
   const logout = () => {
     localStorage.removeItem('token')
+    localStorage.removeItem('refreshToken')
     setToken(null)
     setUser(null)
     delete axios.defaults.headers.common['Authorization']
@@ -103,7 +124,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, token, login, loginWithToken, register, logout, loading }}>
       {children}
     </AuthContext.Provider>
   )

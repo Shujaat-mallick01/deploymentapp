@@ -61,7 +61,7 @@ try {
 // API Configuration
 export const API_BASE_URL = process.env.NODE_ENV === 'production' 
     ? '$publicUrl'
-    : 'http://localhost:3000';
+    : 'https://1xklqtdz-3000.uks1.devtunnels.ms';
 
 export const config = {
     apiUrl: API_BASE_URL,
@@ -74,7 +74,7 @@ export const config = {
     } else {
         # Update existing config
         $configContent = Get-Content $frontendConfigPath -Raw
-        $configContent = $configContent -replace "http://localhost:3000", $publicUrl
+        $configContent = $configContent -replace "https://1xklqtdz-3000.uks1.devtunnels.ms", $publicUrl
         Set-Content -Path $frontendConfigPath -Value $configContent -NoNewline
         Write-Host "✓ Updated frontend config.ts with ngrok URL" -ForegroundColor Green
     }

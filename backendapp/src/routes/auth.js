@@ -84,14 +84,40 @@ router.get('/github',
 
 // GitHub OAuth callback
 router.get('/github/callback',
-  passport.authenticate('github', { session: false, failureRedirect: '/login' }),
-  (req, res) => {
-    // Create session for GitHub user
-    const session = authService.createSession(req.user);
-    
-    // Redirect to frontend with tokens
-    const redirectUrl = `${process.env.FRONTEND_URL || 'http://localhost:3001'}/auth/callback?token=${session.accessToken}&refresh=${session.refreshToken}`;
-    res.redirect(redirectUrl);
+  (req, res, next) => {
+    passport.authenticate('github', { session: false }, (err, user, info) => {
+      if (err) {
+        console.error('GitHub OAuth Error:', err);
+        return res.status(500).json({ 
+          error: 'Authentication failed',
+          message: err.message,
+          details: process.env.NODE_ENV === 'development' ? err.stack : undefined
+        });
+      }
+      
+      if (!user) {
+        console.error('GitHub OAuth: No user returned', info);
+        return res.status(401).json({ 
+          error: 'Authentication failed',
+          message: info?.message || 'Unable to authenticate with GitHub'
+        });
+      }
+      
+      try {
+        // Create session for GitHub user
+        const session = authService.createSession(user);
+        
+        // Redirect to frontend with tokens
+        const redirectUrl = `${process.env.FRONTEND_URL || 'http://localhost:3001'}/auth/callback?token=${session.accessToken}&refresh=${session.refreshToken}`;
+        res.redirect(redirectUrl);
+      } catch (error) {
+        console.error('Session creation error:', error);
+        return res.status(500).json({ 
+          error: 'Session creation failed',
+          message: error.message
+        });
+      }
+    })(req, res, next);
   }
 );
 

@@ -44,7 +44,7 @@ if not exist .env (
     echo IMPORTANT: Edit deploymentapp\backendapp\.env with your settings!
     echo.
 )
-echo Starting backend on http://localhost:3000
+echo Starting backend on https://1xklqtdz-3000.uks1.devtunnels.ms
 start "Backend Server" cmd /k npm start
 cd ..\..
 timeout /t 3 >nul
@@ -89,8 +89,8 @@ echo    PLATFORM STARTING UP!
 echo ========================================
 echo.
 echo Frontend:   http://localhost:3001
-echo Backend:    http://localhost:3000
-echo Health:     http://localhost:3000/health
+echo Backend:    https://1xklqtdz-3000.uks1.devtunnels.ms
+echo Health:     https://1xklqtdz-3000.uks1.devtunnels.ms/health
 echo.
 echo If using ngrok, check the ngrok window for your public URL.
 echo.

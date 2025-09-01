@@ -1,32 +1,79 @@
 const express = require('express');
+const passport = require('passport');
 const gitService = require('../services/gitService');
+const User = require('../models/User');
 
 const router = express.Router();
 
-// Connect repository
-router.post('/connect', async (req, res, next) => {
-  try {
-    const { repoUrl, token } = req.body;
-    
-    if (!repoUrl) {
-      return res.status(400).json({ error: 'Repository URL is required' });
+// Connect repository (requires authentication)
+router.post('/connect', 
+  passport.authenticate('jwt', { session: false }),
+  async (req, res, next) => {
+    try {
+      const { repoUrl } = req.body;
+      const userId = req.user.id || req.user._id;
+      
+      if (!repoUrl) {
+        return res.status(400).json({ error: 'Repository URL is required' });
+      }
+      
+      // Detect provider from URL
+      const provider = gitService.detectProvider(repoUrl);
+      if (!provider) {
+        return res.status(400).json({ error: 'Unsupported repository provider' });
+      }
+      
+      // Get user with OAuth tokens
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      
+      // Get the appropriate OAuth token based on provider
+      let token = null;
+      if (provider === 'github' && user.oauthTokens?.github?.accessToken) {
+        token = user.oauthTokens.github.accessToken;
+      } else if (provider === 'gitlab' && user.oauthTokens?.gitlab?.accessToken) {
+        token = user.oauthTokens.gitlab.accessToken;
+      } else if (provider === 'bitbucket' && user.oauthTokens?.bitbucket?.accessToken) {
+        token = user.oauthTokens.bitbucket.accessToken;
+      }
+      
+      if (!token) {
+        return res.status(401).json({ 
+          error: `No ${provider} authentication found. Please login with ${provider} first.`,
+          provider,
+          requiresAuth: true
+        });
+      }
+      
+      // Get repository info
+      const repoInfo = await gitService.getRepositoryInfo(repoUrl, token);
+      
+      // Try to setup webhook (optional - don't fail if webhook setup fails)
+      let webhook = null;
+      try {
+        webhook = await gitService.setupWebhook(repoUrl, token);
+      } catch (webhookError) {
+        console.warn('Webhook setup failed (non-critical):', webhookError.message);
+        webhook = {
+          error: webhookError.message,
+          skipped: true,
+          instructions: 'Webhook setup failed. You can still use the repository, but automatic deployments won\'t work.'
+        };
+      }
+      
+      res.json({
+        message: 'Repository connected successfully',
+        repository: repoInfo,
+        webhook
+      });
+    } catch (error) {
+      console.error('Repository connection error:', error);
+      next(error);
     }
-    
-    // Get repository info
-    const repoInfo = await gitService.getRepositoryInfo(repoUrl, token);
-    
-    // Setup webhook
-    const webhook = await gitService.setupWebhook(repoUrl, token);
-    
-    res.json({
-      message: 'Repository connected successfully',
-      repository: repoInfo,
-      webhook
-    });
-  } catch (error) {
-    next(error);
   }
-});
+);
 
 // Webhook endpoint
 router.post('/webhook', async (req, res, next) => {
